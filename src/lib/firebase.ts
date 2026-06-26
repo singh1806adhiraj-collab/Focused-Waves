@@ -7,8 +7,14 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
+const fbApiKey = (import.meta as any).env.VITE_FIREBASE_API_KEY;
+
+if (!fbApiKey) {
+  console.warn("VITE_FIREBASE_API_KEY environment variable is not defined. Please add VITE_FIREBASE_API_KEY inside your Settings/Secrets menu to authenticate with Firebase.");
+}
+
 const firebaseConfig = {
-  apiKey: "AIzaSyDIIVVDqx0lh8ffTF1-_zCyKLdUyYyauGU",
+  apiKey: fbApiKey || "MISSING_API_KEY",
   authDomain: "graphical-rite-x7k72.firebaseapp.com",
   projectId: "graphical-rite-x7k72",
   storageBucket: "graphical-rite-x7k72.firebasestorage.app",
