@@ -1,0 +1,6 @@
+{
+  "name": "Focused Waves",
+  "description": "An AI-powered productivity dashboard that provides intelligent task analysis, wave-alert notifications, deadline risk prediction, and personalized recovery planning.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

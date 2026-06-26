@@ -1,0 +1,44 @@
+{
+  "entities": {
+    "Task": {
+      "title": "Task",
+      "description": "A productivity task representing execution waves.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "deadline": { "type": "string" },
+        "priority": { "type": "string", "enum": ["low", "medium", "high"] },
+        "progress": { "type": "number" },
+        "status": { "type": "string", "enum": ["active", "completed"] },
+        "riskLevel": { "type": "string", "enum": ["low", "medium", "high", "pending"] },
+        "riskExplanation": { "type": "string" },
+        "progressFeedback": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["userId", "title", "priority", "progress", "status", "riskLevel", "createdAt"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile metadata",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" }
+      },
+      "required": ["uid", "name", "email"]
+    }
+  },
+  "firestore": {
+    "/tasks/{taskId}": {
+      "schema": "Task",
+      "description": "Collection of productivity tasks"
+    },
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile collection"
+    }
+  }
+}

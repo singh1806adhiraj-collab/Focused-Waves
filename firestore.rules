@@ -1,0 +1,72 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isValidId(id) { 
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
+    }
+    function incoming() { 
+      return request.resource.data; 
+    }
+    function existing() { 
+      return resource.data; 
+    }
+    function isSignedIn() { 
+      return request.auth != null; 
+    }
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Validation for UserProfile
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['uid', 'name', 'email']) 
+        && data.keys().size() == 3
+        && data.uid is string && data.uid == request.auth.uid
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 100
+        && data.email is string && data.email.size() > 0 && data.email.size() <= 200;
+    }
+
+    // Validation for Task
+    function isValidTask(data) {
+      return data.keys().hasAll(['userId', 'title', 'priority', 'progress', 'status', 'riskLevel', 'createdAt'])
+        && data.userId == request.auth.uid
+        && data.title is string && data.title.size() > 0 && data.title.size() <= 200
+        && data.priority is string && (data.priority == 'low' || data.priority == 'medium' || data.priority == 'high')
+        && data.progress is number && data.progress >= 0 && data.progress <= 100
+        && data.status is string && (data.status == 'active' || data.status == 'completed')
+        && data.riskLevel is string && (data.riskLevel == 'low' || data.riskLevel == 'medium' || data.riskLevel == 'high' || data.riskLevel == 'pending' || data.riskLevel == 'low risk' || data.riskLevel == 'medium risk' || data.riskLevel == 'high risk')
+        && data.createdAt is number;
+    }
+
+    // Rules for users collection
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUserProfile(incoming());
+      allow update: if isOwner(userId) && isValidUserProfile(incoming())
+        && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'email']);
+      allow delete: if false;
+    }
+
+    // Rules for tasks collection
+    match /tasks/{taskId} {
+      allow read, list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidTask(incoming());
+      allow update: if isSignedIn() && existing().userId == request.auth.uid && isValidTask(incoming())
+        && (
+          // Allow full updates (except changing userId and createdAt)
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'title', 'description', 'deadline', 'priority', 'progress', 
+            'status', 'riskLevel', 'riskExplanation', 'aiAnalysis', 
+            'progressFeedback', 'recoveryPlan'
+          ])
+        );
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+    }
+  }
+}
